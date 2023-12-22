@@ -29,7 +29,7 @@ def Renewables(idf, ZoneName):
     idf.newidfobject('DemandManagerAssignmentList',
         Name = 'Demand Limiting',
         Meter_Name = 'ElectricityNet:Facility',
-        Demand_Limit_Schedule_Name = 'Always Off',
+        Demand_Limit_Schedule_Name = 'Demand Control Cooling',
         Demand_Limit_Safety_Fraction = 0.95,
         # Billing_Period_Schedule_Name = ,
         # Peak_Period_Schedule_Name = ,

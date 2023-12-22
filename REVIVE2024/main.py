@@ -504,7 +504,7 @@ while True:
                 zeroSch(idf1, 'BAClothesDryerSchedule')
                 zeroSch(idf1, 'BAClothesWasherSchedule')
                 zeroSch(idf1, 'BADishwasherSchedule')
-                ResilienceSchedules(idf1, outage1start, outage1end, outage2start, outage2end, 
+                ResilienceSchedules(idf1, outage1type, outage1start, outage1end, outage2start, outage2end, 
                             coolingOutageStart,coolingOutageEnd,NatVentAvail,
                             demandCoolingAvail,shadingAvail)
                 

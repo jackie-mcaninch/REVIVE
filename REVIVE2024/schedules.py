@@ -56,7 +56,7 @@ def zeroSch(idf,nameSch):
         Field_7 = 0
     )
 
-def ResilienceSchedules(idf, outage1start, outage1end, outage2start, outage2end, 
+def ResilienceSchedules(idf, outage1type, outage1start, outage1end, outage2start, outage2end, 
                         coolingOutageStart,coolingOutageEnd,NatVentAvail,
                         demandCoolingAvail,shadingAvail):
 
@@ -185,30 +185,56 @@ def ResilienceSchedules(idf, outage1start, outage1end, outage2start, outage2end,
         Hourly_Value = 1
         )
 
-    idf.newidfobject('Schedule:Compact',
-        Name = 'MechAvailable',
-        Schedule_Type_Limits_Name = 'Fraction',
-        Field_1 = ('Through: ' + str(outage1start)),
-        Field_2 = 'For: AllDays',
-        Field_3 = 'Until: 24:00',
-        Field_4 = 1.0,
-        Field_5 = ('Through: ' + str(outage1end)),
-        Field_6 = 'For: AllDays',
-        Field_7 = 'Until: 24:00',
-        Field_8 = 0.0,
-        Field_9 = ('Through: ' + str(outage2start)),
-        Field_10 = 'For: AllDays',
-        Field_11 = 'Until: 24:00',
-        Field_12 = 1.0,
-        Field_13 = ('Through: ' + str(outage2end)),
-        Field_14 = 'For: AllDays',
-        Field_15 = 'Until: 24:00',
-        Field_16 = 0.0,
-        Field_17 = 'Through: 12/31',
-        Field_18 = 'For: AllDays',
-        Field_19 = 'Until: 24:00',
-        Field_20 = 1.0
-        )
+    if outage1type == 'HEATING':
+        idf.newidfobject('Schedule:Compact',
+            Name = 'MechAvailable',
+            Schedule_Type_Limits_Name = 'Fraction',
+            Field_1 = ('Through: ' + str(outage1start)),
+            Field_2 = 'For: AllDays',
+            Field_3 = 'Until: 24:00',
+            Field_4 = 1.0,
+            Field_5 = ('Through: ' + str(outage1end)),
+            Field_6 = 'For: AllDays',
+            Field_7 = 'Until: 24:00',
+            Field_8 = 0.0,
+            Field_9 = ('Through: ' + str(outage2start)),
+            Field_10 = 'For: AllDays',
+            Field_11 = 'Until: 24:00',
+            Field_12 = 1.0,
+            Field_13 = ('Through: ' + str(outage2end)),
+            Field_14 = 'For: AllDays',
+            Field_15 = 'Until: 24:00',
+            Field_16 = demandCoolingAvail,
+            Field_17 = 'Through: 12/31',
+            Field_18 = 'For: AllDays',
+            Field_19 = 'Until: 24:00',
+            Field_20 = 1.0
+            )
+    else:
+        idf.newidfobject('Schedule:Compact',
+            Name = 'MechAvailable',
+            Schedule_Type_Limits_Name = 'Fraction',
+            Field_1 = ('Through: ' + str(outage1start)),
+            Field_2 = 'For: AllDays',
+            Field_3 = 'Until: 24:00',
+            Field_4 = 1.0,
+            Field_5 = ('Through: ' + str(outage1end)),
+            Field_6 = 'For: AllDays',
+            Field_7 = 'Until: 24:00',
+            Field_8 = demandCoolingAvail,
+            Field_9 = ('Through: ' + str(outage2start)),
+            Field_10 = 'For: AllDays',
+            Field_11 = 'Until: 24:00',
+            Field_12 = 1.0,
+            Field_13 = ('Through: ' + str(outage2end)),
+            Field_14 = 'For: AllDays',
+            Field_15 = 'Until: 24:00',
+            Field_16 = 0.0,
+            Field_17 = 'Through: 12/31',
+            Field_18 = 'For: AllDays',
+            Field_19 = 'Until: 24:00',
+            Field_20 = 1.0
+            )
 
     idf.newidfobject('Schedule:Compact',
         Name = 'NatVent',
