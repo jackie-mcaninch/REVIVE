@@ -34,7 +34,8 @@ required_dirs = [
 
 invalid_csv_prompt = lambda invalid_file : f"File \"{invalid_file}\" cannot be parsed as CSV."
 missing_column_prompt = lambda missing_col, file : f"Column \"{missing_col}\" missing from file \"{file}\". Please make sure column exists and is named properly."
-   
+rl_missing_item_prompt = lambda rl_file, missing_item, location : f"Problem in runlist \"{rl_file}\": {missing_item} not found in \"{location}\". Please make sure runlist was generated using the designated database."
+rl_misc_prompt = lambda rl_file, prompt : f"Problem in runlist \"{rl_file}\": {prompt}"
 
 
 # define functions
@@ -111,7 +112,7 @@ def validate_runlist_structure(req_cols_path, rl_path):
 def validate_runlist_inputs(rl_path, db_path):
     # load runlist and database files
     runlist_df = pd.read_csv(rl_path)
-    construction_df = pd.read_csv(os.path.join(db_path, CONSTRUCTION_DB_FILE_NAME))
+    construction_db_path = os.path.join(db_path, CONSTRUCTION_DB_FILE_NAME)
     carbon_df = pd.read_csv(os.path.join(db_path, P_CARBON_CORRECTION_DB_FILE_NAME))
     np_carbon_df = pd.read_csv(os.path.join(db_path, NP_CARBON_CORRECTION_DB_FILE_NAME))
     country_emissions_df = pd.read_csv(os.path.join(db_path, COUNTRY_EMISSIONS_DB_FILE_NAME))
@@ -122,11 +123,12 @@ def validate_runlist_inputs(rl_path, db_path):
     # case name (avoid strange characters)
     is_legal_char = lambda x : x.isalnum() or x in " _"
     for case_name in runlist_df["CASE_NAME"]:
-        assert not any(is_legal_char(c) for c in case_name), "Case name may contain letters, numbers, underscores, or spaces only."
+        assert case_name, ""
+        assert not any(is_legal_char(c) for c in case_name), rl_misc_prompt("Case names may contain letters, numbers, underscores, or spaces only.")
     
     # check for geometry file
     for idf in runlist_df["GEOMETRY_IDF"]:
-        assert os.path.isfile(idf)
+        assert os.path.isfile(idf), rl_misc_prompt(f"Geometry file \"{idf}\" not found in study folder.")
     
     # check for weather file
     weather_dir = os.path.join(db_path, WEATHER_DATA_DIR)
@@ -135,9 +137,45 @@ def validate_runlist_inputs(rl_path, db_path):
         assert os.path.isfile(os.path.join(weather_dir, ddy)), f"DDY file \"{ddy}\" could not be found in weather folder \"{weather_dir}\"."
     
     # check construction list items
-    for app_list in runlist_df["APPLIANCE_LIST"]:
-        for app in app_list:
-            assert app in construction_df["NAME"], f"Appliance \"{app}\" not found in construction database \"{os.path.join(db_path, CONSTRUCTION_DB_FILE_NAME)}\"."
+    construction_df = pd.read_csv(construction_db_path)
+    construction_db_label = f"construction database \"{construction_db_path}\""
+    construction_list = construction_df["NAME"]
+    for _, row in runlist_df.iterrows():
+        # appliances
+        app_list = row["APPLIANCE_LIST"]
+        for app in app_list.split(","):
+            app = app.strip()
+            assert app in construction_list, rl_missing_item_prompt(f"Appliance \"{app}\"", construction_db_label)
+    
+        # water heater fuel
+        dhw_fuel = row["WATER_HEATER_FUEL"].strip()
+        prefixed_fuel = f"DHW_{dhw_fuel}"
+        assert prefixed_fuel in construction_list, rl_missing_item_prompt(f"Fuel type \"{prefixed_fuel}\"", construction_db_label)
+    
+        # mechanical system
+        mech_sys = row["MECH_SYSTEM_TYPE"].strip()
+        assert mech_sys in construction_list, rl_missing_item_prompt(f"Mechanical system \"{mech_sys}\"", construction_db_label)
+
+        # int/ext items
+        items = row.filter(like="EXT_") + row.filter(like="INT_")
+        for item in [i.strip() for i in items if i.strip()!=""]:
+            assert item in construction_list, rl_missing_item_prompt(f"Envelope item \"{item}\"", construction_db_label)
+        
+        # foundations
+        interfaces = row.filter(like="FOUNDATION_INTERFACE")
+        for interf in [i.strip() for i in interfaces if i.strip()!=""]:
+            assert interf in ["Slab", "Crawlspace", "Basement"], rl_missing_item_prompt(f"Foundation interface \"{interf}\"", construction_db_label)
+        
+        insulations = row.filter(like="FOUNDATION_INSUINSULATION")
+        for insu in [i.strip() for i in insulations if i.strip()!=""]:
+            assert insu in construction_list, rl_missing_item_prompt(f"Foundation insulation \"{insu}\"", construction_db_label)
+        
+
+        
+
+
+
+    
 
 
 
